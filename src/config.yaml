@@ -1,0 +1,75 @@
+site:
+  name: App62
+  site: 'https://app62.tech'
+  base: '/'
+  trailingSlash: false
+
+  # Set once a Search Console property verification meta tag is issued.
+  googleSiteVerificationId: null
+
+# Default SEO metadata (per-page values override these — see Seo.astro)
+metadata:
+  title:
+    default: App62
+    template: '%s — App62'
+  # PRD §1 summary, reused verbatim as the fallback description.
+  description: 'App62 is a technology services company offering web, mobile, and AI engineering work.'
+  robots:
+    index: true
+    follow: true
+  openGraph:
+    site_name: App62
+    images:
+      - url: '~/assets/images/default.png'
+        width: 1200
+        height: 628
+    type: website
+  twitter:
+    cardType: summary_large_image
+
+i18n:
+  language: en
+  textDirection: ltr
+
+apps:
+  blog:
+    isEnabled: false
+    postsPerPage: 6
+    post:
+      isEnabled: false
+      permalink: '/%slug%'
+      robots:
+        index: false
+        follow: false
+    list:
+      isEnabled: false
+      pathname: 'blog'
+      robots:
+        index: false
+        follow: false
+    category:
+      isEnabled: false
+      pathname: 'category'
+      robots:
+        index: false
+        follow: false
+    tag:
+      isEnabled: false
+      pathname: 'tag'
+      robots:
+        index: false
+        follow: false
+    isRelatedPostsEnabled: false
+    relatedPostsCount: 0
+
+analytics:
+  vendors:
+    # Cloudflare Web Analytics — cookieless, no consent banner (PRD §20).
+    # Google Analytics is explicitly not used. Create the site under
+    # Cloudflare dashboard > Analytics > Web Analytics and paste the token.
+    cloudflare:
+      token: null
+
+ui:
+  # Dark mode disabled for launch — see plan §"Dark mode" decision.
+  theme: 'light:only'

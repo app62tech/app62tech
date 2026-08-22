@@ -1,0 +1,36 @@
+---
+// Wraps AstroWind's Metadata.astro (title/description/canonical/OG/Twitter
+// via astro-seo) and adds the Organization + WebPage JSON-LD the PRD
+// requires (§17), which astro-seo doesn't emit on its own.
+import Metadata from '~/components/common/Metadata.astro';
+import { SITE } from 'astrowind:config';
+import { getCanonical } from '~/utils/permalinks';
+import type { MetaData } from '~/types';
+
+export interface Props extends MetaData {
+  dontUseTitleTemplate?: boolean;
+}
+
+const props = Astro.props;
+const canonical = String(getCanonical(String(Astro.url.pathname)));
+
+const organizationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE?.name,
+  url: SITE?.site,
+};
+
+const webPageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: props.title,
+  description: props.description,
+  url: canonical,
+};
+---
+
+<Metadata {...props} />
+<script type="application/ld+json" set:html={JSON.stringify(organizationLd)} />
+<script type="application/ld+json" set:html={JSON.stringify(webPageLd)} />
+<slot />

@@ -1,0 +1,24 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import ContactForm from '~/components/ContactForm.astro';
+
+export const prerender = true;
+
+const metadata = {
+  title: 'Contact',
+  description: 'Get in touch with App62 about a web, app, or AI engineering project.',
+};
+---
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Contact" title="Get in touch" />
+
+  <WidgetWrapper containerClass="max-w-xl mx-auto">
+    <ContactForm />
+    <p class="text-center text-sm text-muted mt-6">
+      Prefer email? Write to <a class="text-accent underline" href="mailto:hello@app62.tech">hello@app62.tech</a>.
+    </p>
+  </WidgetWrapper>
+</Layout>

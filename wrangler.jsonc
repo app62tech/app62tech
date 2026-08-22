@@ -1,0 +1,20 @@
+{
+  // See https://developers.cloudflare.com/workers/wrangler/configuration/
+  "name": "app62tech",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "upload_source_maps": true,
+  // Secrets (TURNSTILE_SECRET_KEY, RESEND_API_KEY) are set via
+  // `wrangler secret put <NAME>` — never committed here.
+  "vars": {
+    "TURNSTILE_SITE_KEY": "",
+  },
+}

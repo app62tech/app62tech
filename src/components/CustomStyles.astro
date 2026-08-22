@@ -1,0 +1,71 @@
+---
+// Brand tokens from the App62 PRD §8.1. Dark mode is disabled for launch
+// (src/config.yaml ui.theme: 'light:only'), so only one palette exists here —
+// see the plan's "Dark mode" decision for why.
+//
+// Contrast constraint (PRD §8.1): #FF5757 (~3.1:1 on white) and #FF1616
+// (~3.9:1 on white) both fail WCAG AA for normal text — neither may be used
+// for links or body-size text. #B91C1C (~5.9:1) is the only red permitted
+// for text/icons below 24px; it is also what buttons default to, since a
+// button's resting-state contrast is what CI actually checks. #FF5757 stays
+// reserved for the logo, display headings ≥24px, and non-text decoration;
+// #FF1616 is reserved for hover states and large filled-CTA text.
+---
+
+<style is:inline>
+  :root {
+    --aw-font-sans: 'Inter Variable', sans-serif;
+    --aw-font-serif: 'Inter Variable', sans-serif;
+    --aw-font-heading: 'Space Grotesk', sans-serif;
+
+    --aw-color-primary: #ff5757; /* Brand */
+    --aw-color-secondary: #ff1616; /* Brand deep */
+    --aw-color-accent: #b91c1c; /* Action */
+
+    --aw-color-text-heading: #1a1a1a; /* Ink */
+    --aw-color-text-default: #1a1a1a; /* Ink */
+    --aw-color-text-muted: #525252; /* solid, not alpha-blended — measured ~7.5:1 on white */
+    --aw-color-bg-page: #ffffff;
+
+    --aw-color-bg-page-dark: #1a1a1a;
+
+    ::selection {
+      background-color: #ff5757;
+      color: #ffffff;
+    }
+  }
+
+  /* Visible focus indicator on every interactive element — AstroWind ships
+     none beyond the browser default, which some components override. Action
+     red clears the WCAG 2.2 non-text contrast minimum (3:1) against both the
+     white page background and the ink/brand button fills used here. */
+  :focus-visible {
+    outline: 2px solid #b91c1c;
+    outline-offset: 2px;
+  }
+
+  /* AstroWind's scroll-reveal ("intersect") animation fades sections in from
+     opacity:0, staggered per element. Sampled mid-transition it can leave
+     text at well below the required contrast ratio for a real, if brief,
+     window — not acceptable given accessibility is a hard gate here (PRD
+     §18). Simpler and more robust than tuning animation timing: content is
+     always fully visible: */
+  .intersect-once,
+  .intersect-quarter,
+  .intersect-half,
+  .intersect-full,
+  .intersect-no-queue {
+    opacity: 1 !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>

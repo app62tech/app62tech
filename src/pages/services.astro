@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import { Icon } from 'astro-icon/components';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import { getPermalink } from '~/utils/permalinks';
+
+export const prerender = true;
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+
+const metadata = {
+  title: 'Services',
+  description: 'Web audits, app development, custom AI agents, and automation — what each includes and who it suits.',
+};
+---
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Services" title="What we do" />
+
+  {
+    services.map((s, i) => (
+      <WidgetWrapper id={s.id} containerClass={`max-w-4xl mx-auto ${i % 2 ? 'bg-page' : ''}`}>
+        <div class="flex items-start gap-6">
+          <Icon name={s.data.icon} class="hidden sm:block w-10 h-10 text-accent shrink-0" />
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold font-heading text-heading mb-3">{s.data.title}</h2>
+            <p class="text-lg text-default mb-4">{s.data.description}</p>
+            <p class="text-muted">
+              <span class="font-semibold text-default">Who it suits: </span>
+              {s.data.suitsWho}
+            </p>
+          </div>
+        </div>
+      </WidgetWrapper>
+    ))
+  }
+
+  <CallToAction
+    actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}
+    title="Have a defined piece of work?"
+    subtitle="Tell us what you need built or audited."
+  />
+</Layout>

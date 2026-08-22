@@ -1,50 +1,103 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+
+import Layout from '~/layouts/PageLayout.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import Features from '~/components/widgets/Features.astro';
+import Content from '~/components/widgets/Content.astro';
+import Steps from '~/components/widgets/Steps.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import { getPermalink } from '~/utils/permalinks';
+import cliqueScreenshots from '~/assets/images/work/clique-screenshots.png';
+
+export const prerender = true;
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const [clique] = await getCollection('work');
+
+const metadata = {
+  title: 'Web, mobile, and AI engineering',
+  description: 'App62 is a technology services company offering web, mobile, and AI engineering work.',
+  ignoreTitleTemplate: true,
+};
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<Layout metadata={metadata}>
+  <!-- Headline paraphrases the PRD's own positioning statement (§1) —
+       exact wording pending final client sign-off. -->
+  <Hero tagline="App62" actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}>
+    <Fragment slot="title">
+      Web, mobile, and <span class="text-primary">AI engineering</span>.
+    </Fragment>
+    <Fragment slot="subtitle">
+      A technology services company offering web, mobile, and AI engineering work — audits, apps, custom agents, and the
+      automation to connect them.
+    </Fragment>
+  </Hero>
+
+  <!-- Services ************************ -->
+
+  <Features
+    id="services"
+    tagline="Services"
+    title="What we do"
+    columns={2}
+    items={services.map((s) => ({
+      title: s.data.title,
+      description: s.data.summary,
+      icon: s.data.icon,
+      callToAction: { text: 'Learn more', href: `${getPermalink('/services')}#${s.id}`, variant: 'link' },
+    }))}
+  />
+
+  <!-- Featured work: Clique *********** -->
+
+  {
+    clique && (
+      <Content
+        isReversed
+        tagline="Featured work"
+        title={clique.data.title}
+        content={`${clique.data.problem} ${clique.data.whatWasBuilt} ${clique.data.outcome}`}
+        callToAction={{ text: 'Read the case study', href: getPermalink('/work/clique') }}
+        image={{
+          src: cliqueScreenshots,
+          alt: 'Clique App Store screenshots: Find Your Crowd, Start Instantly, Connect, and Meet in Real Life',
+        }}
+      />
+    )
+  }
+
+  <!-- Process ************************* -->
+
+  <!-- Generic engagement outline — placeholder, pending confirmed process copy. -->
+  <Steps
+    tagline="Process"
+    title="How an engagement runs"
+    items={[
+      {
+        title: '1. <span class="font-medium">Scope</span>',
+        description: 'Define the one job, deliverable, or audit precisely before any work starts.',
+        icon: 'tabler:target-arrow',
+      },
+      {
+        title: '2. <span class="font-medium">Build</span>',
+        description: 'Work happens in the open — you see progress as it lands, not just at the end.',
+        icon: 'tabler:hammer',
+      },
+      {
+        title: '3. <span class="font-medium">Review</span>',
+        description: 'You get a working result and a clear list of what to do next.',
+        icon: 'tabler:checklist',
+      },
+    ]}
+  />
+
+  <!-- CTA band ************************ -->
+
+  <CallToAction
+    actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}
+    title="Have a defined piece of work?"
+    subtitle="Tell us what you need built or audited."
+  />
+</Layout>

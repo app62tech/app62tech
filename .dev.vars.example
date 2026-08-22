@@ -1,0 +1,13 @@
+# Local-dev Worker secrets (read by `wrangler dev`). Copy to `.dev.vars` and
+# fill in — never commit the real values. In production these are set with
+# `wrangler secret put <NAME>`, not in wrangler.jsonc.
+
+# Turnstile widget's secret key (paired with PUBLIC_TURNSTILE_SITE_KEY in .env).
+TURNSTILE_SECRET_KEY=
+
+# Resend API key — resend.com — used to send contact-form notifications.
+RESEND_API_KEY=
+
+# Optional overrides; default to hello@app62.tech / a Resend sandbox sender.
+CONTACT_TO_EMAIL=
+CONTACT_FROM_EMAIL=

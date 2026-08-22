@@ -1,0 +1,14 @@
+---
+// Cloudflare Web Analytics — cookieless, no consent banner required (PRD §20).
+// Google Analytics is intentionally not used. Renders nothing until a token
+// is configured in src/config.yaml (analytics.vendors.cloudflare.token).
+import { ANALYTICS } from 'astrowind:config';
+
+const token = ANALYTICS?.vendors?.cloudflare?.token ? String(ANALYTICS.vendors.cloudflare.token) : '';
+---
+
+{
+  token && (
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={`{"token": "${token}"}`} />
+  )
+}
