@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Image from '~/components/common/Image.astro';
+import { getPermalink } from '~/utils/permalinks';
+
+export const prerender = true;
+
+const works = await getCollection('work');
+
+const metadata = {
+  title: 'Work',
+  description: 'Case studies from shipped App62 projects.',
+};
+
+const thumbnails = import.meta.glob<{ default: ImageMetadata }>('~/assets/images/work/*.png', { eager: true });
+
+function thumbnailFor(id: string) {
+  const entries = Object.entries(thumbnails);
+  const screenshots = entries.find(([path]) => path.includes(`${id}-screenshots`));
+  const icon = entries.find(([path]) => path.includes(`${id}-icon`));
+  return (screenshots ?? icon)?.[1]?.default;
+}
+---
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Work" title="What we've shipped" />
+
+  <WidgetWrapper containerClass="max-w-4xl mx-auto">
+    <div class="grid sm:grid-cols-2 gap-8">
+      {
+        works.map((w) => {
+          const thumb = thumbnailFor(w.id);
+          return (
+            <a
+              href={getPermalink(`/work/${w.id}`)}
+              class="block rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition"
+            >
+              {thumb && (
+                <Image
+                  src={thumb}
+                  alt={`${w.data.title} screenshot`}
+                  class="w-full h-48 object-cover object-top bg-gray-50"
+                  width={640}
+                  height={384}
+                  format="webp"
+                />
+              )}
+              <div class="p-5">
+                <h2 class="text-xl font-bold font-heading text-heading mb-1">{w.data.title}</h2>
+                <p class="text-muted">{w.data.problem}</p>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+  </WidgetWrapper>
+
+  <CallToAction
+    actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}
+    title="Have a defined piece of work?"
+    subtitle="Tell us what you need built or audited."
+  />
+</Layout>
