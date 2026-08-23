@@ -17,13 +17,15 @@ const metadata = {
   description: 'Case studies from shipped App62 projects.',
 };
 
-const thumbnails = import.meta.glob<{ default: ImageMetadata }>('~/assets/images/work/*.png', { eager: true });
+const thumbnails = import.meta.glob<{ default: ImageMetadata }>('~/assets/images/work/*.{png,webp}', {
+  eager: true,
+});
 
 function thumbnailFor(id: string) {
   const entries = Object.entries(thumbnails);
-  const screenshots = entries.find(([path]) => path.includes(`${id}-screenshots`));
-  const icon = entries.find(([path]) => path.includes(`${id}-icon`));
-  return (screenshots ?? icon)?.[1]?.default;
+  const find = (suffix: string) => entries.find(([path]) => path.includes(`${id}${suffix}`));
+  const match = find('-screenshots') ?? find('-1') ?? find('-home') ?? find('-icon');
+  return match?.[1]?.default;
 }
 ---
 

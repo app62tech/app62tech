@@ -16,6 +16,8 @@ const ROUTES = [
   '/work/',
   '/work/clique/',
   '/work/cardlynk/',
+  '/work/menu-gen-ai/',
+  '/work/vetra/',
   '/contact/',
   '/privacy/',
   '/terms/',

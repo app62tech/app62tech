@@ -1,0 +1,104 @@
+---
+import { getCollection } from 'astro:content';
+
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Image from '~/components/common/Image.astro';
+import { getPermalink } from '~/utils/permalinks';
+import icon from '~/assets/images/work/menu-gen-ai-icon.png';
+import shot1 from '~/assets/images/work/menu-gen-ai-home.webp';
+import shot2 from '~/assets/images/work/menu-gen-ai-1.webp';
+import shot3 from '~/assets/images/work/menu-gen-ai-2.webp';
+import shot4 from '~/assets/images/work/menu-gen-ai-3.webp';
+import shot5 from '~/assets/images/work/menu-gen-ai-4.webp';
+
+export const prerender = true;
+
+const works = await getCollection('work');
+const item = works.find((w) => w.id === 'menu-gen-ai')!;
+
+const metadata = {
+  title: item.data.title,
+  description: item.data.whatWasBuilt,
+};
+
+const softwareAppLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: item.data.title,
+  applicationCategory: 'FoodEstablishmentReservation',
+  operatingSystem: 'iOS',
+  ...(item.data.appStoreUrl ? { url: item.data.appStoreUrl } : {}),
+};
+
+const shots = [
+  { src: shot1, alt: 'Menu Gen AI home screen: menu live, shareable via QR' },
+  { src: shot2, alt: 'Menu Gen AI onboarding: paper menu digitized in 30 seconds' },
+  { src: shot3, alt: 'Guests browse a digital menu with dish photos and prices' },
+  { src: shot4, alt: 'Menu editor listing every dish in one place' },
+  { src: shot5, alt: 'AI assistant recommending a dish from guest questions' },
+];
+---
+
+<Layout metadata={metadata}>
+  <script type="application/ld+json" set:html={JSON.stringify(softwareAppLd)} />
+  <HeroText tagline="Work" title={item.data.title} />
+
+  <WidgetWrapper containerClass="max-w-3xl mx-auto">
+    <Image src={icon} alt="Menu Gen AI" class="h-16 w-16 rounded-xl mb-6" widths={[200]} sizes="64px" format="webp" />
+
+    <!-- Real screenshots from the live App Store listing. -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-2">
+      {
+        shots.map((s) => (
+          <Image
+            src={s.src}
+            alt={s.alt}
+            class="w-full rounded-lg border border-gray-200"
+            widths={[300]}
+            sizes="230px"
+            format="webp"
+          />
+        ))
+      }
+    </div>
+    <p class="text-sm text-muted mb-12">Screenshots from the App Store listing.</p>
+
+    <div class="space-y-8">
+      <div>
+        <h2 class="text-xl font-bold font-heading text-heading mb-2">Problem</h2>
+        <p class="text-lg text-default">{item.data.problem}</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold font-heading text-heading mb-2">What was built</h2>
+        <p class="text-lg text-default">{item.data.whatWasBuilt}</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold font-heading text-heading mb-2">Surfaces</h2>
+        <p class="text-lg text-default">{item.data.surfaces}</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold font-heading text-heading mb-2">Outcome</h2>
+        <p class="text-lg text-default">{item.data.outcome}</p>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-wrap gap-4">
+      {
+        item.data.appStoreUrl && (
+          <a class="btn-primary" href={item.data.appStoreUrl} target="_blank" rel="noopener noreferrer">
+            View on the App Store
+          </a>
+        )
+      }
+    </div>
+  </WidgetWrapper>
+
+  <CallToAction
+    actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}
+    title="Have a defined piece of work?"
+    subtitle="Tell us what you need built or audited."
+  />
+</Layout>
