@@ -55,14 +55,14 @@ const errored = url.searchParams.get('error') === '1';
       </div>
     </div>
 
-    <ol
+    <div
       id="chat-log"
       role="log"
       aria-live="polite"
       aria-label="Conversation with App62"
       class="flex flex-col gap-3 h-[340px] overflow-y-auto pr-1"
     >
-    </ol>
+    </div>
 
     <div id="chat-choices" class="flex flex-wrap gap-2 mt-4 empty:hidden"></div>
 
@@ -160,7 +160,7 @@ const errored = url.searchParams.get('error') === '1';
   const root = document.getElementById('contact-chat');
 
   if (form && root && !form.classList.contains('hidden')) {
-    const log = root.querySelector('#chat-log') as HTMLOListElement;
+    const log = root.querySelector('#chat-log') as HTMLDivElement;
     const choices = root.querySelector('#chat-choices') as HTMLDivElement;
     const composer = root.querySelector('#chat-composer') as HTMLFormElement;
     const input = root.querySelector('#chat-input') as HTMLTextAreaElement;
@@ -184,7 +184,7 @@ const errored = url.searchParams.get('error') === '1';
     const scrollDown = () => log.scrollTo({ top: log.scrollHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
 
     const bubble = (text: string, from: 'bot' | 'user') => {
-      const li = document.createElement('li');
+      const li = document.createElement('div');
       li.className =
         from === 'bot'
           ? 'self-start max-w-[85%] rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-2.5 text-sm whitespace-pre-line'
@@ -196,7 +196,7 @@ const errored = url.searchParams.get('error') === '1';
 
     const say = async (...lines: string[]) => {
       for (const line of lines) {
-        const typing = document.createElement('li');
+        const typing = document.createElement('div');
         typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
         typing.setAttribute('aria-hidden', 'true');
         typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
@@ -274,7 +274,7 @@ const errored = url.searchParams.get('error') === '1';
     };
 
     const send = async () => {
-      const typing = document.createElement('li');
+      const typing = document.createElement('div');
       typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
       typing.setAttribute('aria-hidden', 'true');
       typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
