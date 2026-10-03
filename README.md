@@ -46,7 +46,10 @@ Submissions are sent by [Resend](https://resend.com) into the Zoho Mail inbox
 (`hello@app62.tech`) with Reply-To set to the visitor, and protected by
 Cloudflare Turnstile. Set these on the Worker:
 
-- Secrets (`wrangler secret put <NAME>`): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`
+- Secrets (`wrangler secret put <NAME>`): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`.
+  Without `TURNSTILE_SECRET_KEY` the API rejects every submission (503) rather than accept unverified ones.
+  For local `npx wrangler dev`, add Turnstile's always-pass test secret to `.dev.vars`:
+  `TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`
 - Vars (in `wrangler.jsonc`): `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` (must be on the Resend-verified domain)
 - Build-time: `PUBLIC_TURNSTILE_SITE_KEY` (see `.env.example`)
 
