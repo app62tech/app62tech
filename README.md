@@ -48,6 +48,8 @@ Cloudflare Turnstile. Set these on the Worker:
 
 - Secrets (`wrangler secret put <NAME>`): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`
 - Vars (in `wrangler.jsonc`): `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` (must be on the Resend-verified domain)
+- Auto-reply: a fixed "thanks, we got it" email to the visitor, sent only when Turnstile is configured (so it can't be abused). Set `CONTACT_AUTOREPLY=off` to disable.
+- Optional alerts (secrets): `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`, and/or `SLACK_WEBHOOK_URL`
 - Build-time: `PUBLIC_TURNSTILE_SITE_KEY` (see `.env.example`)
 
 ## Deploy
