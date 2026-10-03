@@ -1,10 +1,14 @@
 ---
-// Progressively enhanced contact form (PRD §7.4, §16):
+// Progressively enhanced contact form:
 //   - Plain <form method="POST" action="/api/contact"> works with JS off,
-//     redirecting back here with ?sent=true / ?error=1.
-//   - With JS, the script below intercepts submit, posts JSON, and updates
-//     the aria-live status region in place instead of navigating.
-//   - Honeypot field + Cloudflare Turnstile guard the endpoint server-side.
+//     redirecting back with ?sent=true / ?error=1.
+//   - With JS, a scripted chat asks one question at a time (topic → message →
+//     name → email → review), writes the answers into this same form, and
+//     posts it as JSON-accepting fetch. The form's fields are hidden in chat
+//     mode; the honeypot and Turnstile widget stay in it, so the server-side
+//     guards are unchanged.
+import { Icon } from 'astro-icon/components';
+
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
 
 const services = [
@@ -20,7 +24,7 @@ const sent = url.searchParams.get('sent') === 'true';
 const errored = url.searchParams.get('error') === '1';
 ---
 
-<div class="flex flex-col max-w-xl mx-auto rounded-lg border border-gray-200 bg-white shadow p-4 sm:p-6 lg:p-8 w-full">
+<div class="flex flex-col max-w-xl mx-auto rounded-2xl border border-gray-200 bg-white shadow p-4 sm:p-6 w-full">
   <div id="form-status" role="status" aria-live="polite" class="mb-4 empty:hidden">
     {
       sent && (
@@ -38,8 +42,48 @@ const errored = url.searchParams.get('error') === '1';
     }
   </div>
 
+  <!-- Chat UI: revealed by the script below; stays hidden with JS off. -->
+  <div id="contact-chat" hidden data-services={JSON.stringify(services)}>
+    <div class="flex items-center gap-3 pb-4 mb-4 border-b border-gray-100">
+      <span
+        class="w-10 h-10 rounded-full bg-accent text-white font-heading font-bold flex items-center justify-center"
+        aria-hidden="true">62</span
+      >
+      <div>
+        <p class="font-bold text-heading leading-tight">App62</p>
+        <p class="text-xs text-muted">Your message goes straight to our inbox.</p>
+      </div>
+    </div>
+
+    <ol
+      id="chat-log"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation with App62"
+      class="flex flex-col gap-3 h-[340px] overflow-y-auto pr-1"
+    >
+    </ol>
+
+    <div id="chat-choices" class="flex flex-wrap gap-2 mt-4 empty:hidden"></div>
+
+    <form id="chat-composer" class="mt-4 flex gap-2 items-end" hidden>
+      <label for="chat-input" id="chat-label" class="sr-only">Your answer</label>
+      <textarea
+        id="chat-input"
+        rows="1"
+        class="flex-1 resize-none rounded-2xl border border-gray-200 px-4 py-3 max-h-40 focus:border-accent"></textarea>
+      <button
+        type="submit"
+        class="w-12 h-12 shrink-0 rounded-full bg-accent text-white flex items-center justify-center hover:bg-secondary"
+      >
+        <Icon name="tabler:arrow-up" class="w-5 h-5" aria-hidden="true" />
+        <span class="sr-only">Send answer</span>
+      </button>
+    </form>
+  </div>
+
   <form id="contact-form" method="POST" action="/api/contact" class:list={{ hidden: sent }}>
-    <div class="mb-6">
+    <div class="mb-6" data-field>
       <label for="name" class="block text-sm font-medium">Name</label>
       <input
         type="text"
@@ -51,7 +95,7 @@ const errored = url.searchParams.get('error') === '1';
       />
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6" data-field>
       <label for="email" class="block text-sm font-medium">Email</label>
       <input
         type="email"
@@ -63,7 +107,7 @@ const errored = url.searchParams.get('error') === '1';
       />
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6" data-field>
       <label for="service" class="block text-sm font-medium">What's this about? (optional)</label>
       <select id="service" name="service" class="py-3 px-4 block w-full text-md rounded-lg border border-gray-200">
         <option value="">Not sure yet</option>
@@ -71,7 +115,7 @@ const errored = url.searchParams.get('error') === '1';
       </select>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6" data-field>
       <label for="message" class="block text-sm font-medium">Message</label>
       <textarea
         id="message"
@@ -89,13 +133,13 @@ const errored = url.searchParams.get('error') === '1';
 
     {
       turnstileSiteKey && (
-        <div class="mb-6">
+        <div class="mt-4">
           <div class="cf-turnstile" data-sitekey={turnstileSiteKey} />
         </div>
       )
     }
 
-    <div class="mt-4 grid">
+    <div class="mt-4 grid" data-field>
       <button type="submit" class="btn-primary">Send message</button>
     </div>
   </form>
@@ -103,47 +147,240 @@ const errored = url.searchParams.get('error') === '1';
 
 {turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
 
+<style>
+  #contact-form.chat-mode [data-field] {
+    display: none;
+  }
+</style>
+
 <script>
+  const FAIL = "Sorry — that didn't go through. Please try again, or email hello@app62.tech.";
+
   const form = document.getElementById('contact-form') as HTMLFormElement | null;
-  const status = document.getElementById('form-status');
+  const root = document.getElementById('contact-chat');
 
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-    if (submitBtn) submitBtn.disabled = true;
+  if (form && root && !form.classList.contains('hidden')) {
+    const log = root.querySelector('#chat-log') as HTMLOListElement;
+    const choices = root.querySelector('#chat-choices') as HTMLDivElement;
+    const composer = root.querySelector('#chat-composer') as HTMLFormElement;
+    const input = root.querySelector('#chat-input') as HTMLTextAreaElement;
+    const label = root.querySelector('#chat-label') as HTMLLabelElement;
+    const services = JSON.parse(root.dataset.services ?? '[]') as { value: string; label: string }[];
+    const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, reduceMotion ? 0 : ms));
 
-    try {
-      const response = await fetch(form.action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { Accept: 'application/json' },
+    type Step = 'message' | 'name' | 'email' | 'idle';
+    let step: Step = 'idle';
+    // Only move focus once the visitor is using the chat — never on page load.
+    let engaged = false;
+    root.addEventListener('pointerdown', () => (engaged = true));
+    root.addEventListener('keydown', () => (engaged = true));
+    const focus = (el: HTMLElement | null) => engaged && el?.focus({ preventScroll: true });
+
+    root.hidden = false;
+    form.classList.add('chat-mode');
+
+    const scrollDown = () => log.scrollTo({ top: log.scrollHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
+
+    const bubble = (text: string, from: 'bot' | 'user') => {
+      const li = document.createElement('li');
+      li.className =
+        from === 'bot'
+          ? 'self-start max-w-[85%] rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-2.5 text-sm whitespace-pre-line'
+          : 'self-end max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1a1a1a] text-white px-4 py-2.5 text-sm whitespace-pre-line';
+      li.textContent = text;
+      log.append(li);
+      scrollDown();
+    };
+
+    const say = async (...lines: string[]) => {
+      for (const line of lines) {
+        const typing = document.createElement('li');
+        typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
+        typing.setAttribute('aria-hidden', 'true');
+        typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+        log.append(typing);
+        scrollDown();
+        await wait(500);
+        typing.remove();
+        bubble(line, 'bot');
+      }
+    };
+
+    const ask = (next: Step, prompt: string, opts: { autocomplete?: string; inputMode?: string } = {}) => {
+      step = next;
+      label.textContent = prompt;
+      input.value = '';
+      input.placeholder = prompt;
+      input.setAttribute('autocomplete', opts.autocomplete ?? 'off');
+      input.inputMode = (opts.inputMode ?? 'text') as typeof input.inputMode;
+      input.rows = next === 'message' ? 3 : 1;
+      composer.hidden = false;
+      focus(input);
+    };
+
+    const offer = (options: { value: string; label: string }[], onPick: (value: string, label: string) => void) => {
+      composer.hidden = true;
+      choices.replaceChildren(
+        ...options.map((o) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className =
+            'rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent';
+          b.textContent = o.label;
+          b.addEventListener('click', () => {
+            choices.replaceChildren();
+            onPick(o.value, o.label);
+          });
+          return b;
+        })
+      );
+      focus(choices.firstElementChild as HTMLElement | null);
+    };
+
+    const start = async () => {
+      log.replaceChildren();
+      step = 'idle';
+      composer.hidden = true;
+      await say("Hi! I'll pass your message to the App62 team.", 'What would you like to talk about?');
+      offer([...services, { value: '', label: 'Not sure yet' }], async (value, text) => {
+        field('service').value = value;
+        bubble(text, 'user');
+        await say(
+          value
+            ? 'Great. Tell us a little about it — how does your team work today, or what do you need built?'
+            : "No problem. Tell us a little about what you're working on."
+        );
+        ask('message', 'Your message');
       });
-      const result = (await response.json().catch(() => null)) as { ok?: boolean } | null;
+    };
 
-      if (status) {
-        status.innerHTML = '';
-        const p = document.createElement('p');
-        p.className = 'rounded-md px-4 py-3 text-sm border';
-        if (response.ok && result?.ok) {
-          p.className += ' bg-green-50 border-green-200 text-green-800';
-          p.textContent = "Thanks — your message is in. We'll get back to you soon.";
-          form.hidden = true;
-        } else {
-          p.className += ' bg-red-50 border-red-200 text-red-800';
-          p.textContent = 'Something went wrong sending that. Please try again, or email us directly below.';
+    const review = async () => {
+      step = 'idle';
+      composer.hidden = true;
+      const topic = services.find((s) => s.value === field('service').value)?.label ?? 'Not sure yet';
+      await say(
+        "Here's what we'll send:",
+        `${field('name').value} · ${field('email').value}\nTopic: ${topic}\n\n${field('message').value}`
+      );
+      offer(
+        [
+          { value: 'send', label: 'Send message' },
+          { value: 'restart', label: 'Start over' },
+        ],
+        (v) => (v === 'send' ? send() : start())
+      );
+    };
+
+    const send = async () => {
+      const typing = document.createElement('li');
+      typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
+      typing.setAttribute('aria-hidden', 'true');
+      typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+      log.append(typing);
+      scrollDown();
+
+      let ok = false;
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        const result = (await response.json().catch(() => null)) as { ok?: boolean } | null;
+        ok = response.ok && !!result?.ok;
+      } catch {
+        // Network error: `ok` stays false.
+      }
+      typing.remove();
+
+      if (ok) {
+        await say(`Sent! We'll reply to ${field('email').value} soon.`);
+        offer([{ value: 'restart', label: 'Send another message' }], () => {
+          form.reset();
+          start();
+        });
+      } else {
+        // A Turnstile token is single-use; get a fresh one for the retry.
+        (window as { turnstile?: { reset: () => void } }).turnstile?.reset();
+        await say(FAIL);
+        offer(
+          [
+            { value: 'send', label: 'Try again' },
+            { value: 'restart', label: 'Start over' },
+          ],
+          (v) => (v === 'send' ? send() : start())
+        );
+      }
+    };
+
+    composer.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const value = input.value.trim();
+      if (!value || step === 'idle') return;
+      const current = step;
+      step = 'idle';
+      composer.hidden = true;
+      bubble(value, 'user');
+
+      if (current === 'message') {
+        field('message').value = value;
+        await say('Thanks! What should we call you?');
+        ask('name', 'Your name', { autocomplete: 'name' });
+      } else if (current === 'name') {
+        field('name').value = value;
+        await say(`Nice to meet you, ${value}. Which email should we reply to?`);
+        ask('email', 'Your email', { autocomplete: 'email', inputMode: 'email' });
+      } else if (current === 'email') {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          await say("Hmm, that doesn't look like an email address. Could you check it?");
+          ask('email', 'Your email', { autocomplete: 'email', inputMode: 'email' });
+          return;
         }
-        status.appendChild(p);
+        field('email').value = value;
+        await review();
       }
-    } catch {
-      if (status) {
-        status.innerHTML = '';
-        const p = document.createElement('p');
-        p.className = 'rounded-md px-4 py-3 text-sm border bg-red-50 border-red-200 text-red-800';
-        p.textContent = 'Something went wrong sending that. Please try again, or email us directly below.';
-        status.appendChild(p);
+    });
+
+    // Enter sends; Shift+Enter adds a new line (for longer messages).
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        composer.requestSubmit();
       }
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
-    }
-  });
+    });
+
+    // Start the conversation when the chat scrolls into view, so the greeting
+    // is seen being typed rather than finished long before the visitor arrives.
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        observer.disconnect();
+        start();
+      }
+    });
+    observer.observe(root);
+  }
 </script>
+
+<style is:global>
+  #chat-log .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #8a8178;
+    animation: chat-dot 1s infinite ease-in-out;
+  }
+  #chat-log .dot:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  #chat-log .dot:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes chat-dot {
+    50% {
+      transform: translateY(-3px);
+      opacity: 0.5;
+    }
+  }
+</style>
