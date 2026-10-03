@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const MAX_LENGTHS = { name: 200, email: 320, message: 5000, service: 40, company: 200 };
+const MAX_LENGTHS = { name: 200, email: 320, message: 5000, service: 40, company: 200, source: 200 };
 
 const SERVICE_LABELS: Record<string, string> = {
   'ai-transformation': 'AI transformation',
@@ -39,7 +39,7 @@ async function verifyTurnstile(token: string, secret: string, ip: string | null)
 
 async function sendEmail(
   env: Record<string, string | undefined>,
-  fields: { name: string; email: string; service: string; message: string }
+  fields: { name: string; email: string; service: string; message: string; source: string }
 ) {
   const apiKey = env.RESEND_API_KEY;
   // Delivered by Resend into the Zoho Mail inbox; Reply goes to the visitor.
@@ -64,7 +64,7 @@ async function sendEmail(
       to: [to],
       reply_to: fields.email,
       subject: `New enquiry from ${fields.name}${service ? ` (${service})` : ''}`,
-      text: `From: ${fields.name} <${fields.email}>\nService: ${service || 'not specified'}\n\n${fields.message}`,
+      text: `From: ${fields.name} <${fields.email}>\nService: ${service || 'not specified'}\nSource: ${fields.source || 'unknown'}\n\n${fields.message}`,
     }),
   });
 
@@ -94,6 +94,8 @@ export const POST: APIRoute = async ({ request, locals, url, clientAddress }) =>
   const email = get('email').slice(0, MAX_LENGTHS.email);
   const service = get('service').slice(0, MAX_LENGTHS.service);
   const message = get('message').slice(0, MAX_LENGTHS.message);
+  // Single line only, so it can't inject extra lines into the email body.
+  const source = get('source').replace(/\s+/g, ' ').slice(0, MAX_LENGTHS.source);
   const turnstileToken = get('cf-turnstile-response');
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -132,7 +134,7 @@ export const POST: APIRoute = async ({ request, locals, url, clientAddress }) =>
     return wantsJson ? jsonResponse({ ok: false, reason: 'not_configured' }, 503) : redirectTo(url, false);
   }
 
-  const sent = await sendEmail(env, { name, email, service, message });
+  const sent = await sendEmail(env, { name, email, service, message, source });
 
   return wantsJson ? jsonResponse({ ok: sent }, sent ? 200 : 502) : redirectTo(url, sent);
 };

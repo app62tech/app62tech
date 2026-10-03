@@ -7,7 +7,7 @@ export const headerData = {
     { text: 'Work', href: '/#work' },
     { text: 'Development', href: '/#services' },
   ],
-  actions: [{ text: "Let's talk", href: '/#contact', variant: 'primary', icon: 'tabler:arrow-right' }],
+  actions: [{ text: "Let's talk", href: '/#contact', variant: 'primary' as const, icon: 'tabler:arrow-right' }],
 };
 
 export const footerData = {

@@ -128,6 +128,9 @@ const errored = url.searchParams.get('error') === '1';
         class="py-3 px-4 block w-full text-md rounded-lg border border-gray-200"></textarea>
     </div>
 
+    <!-- How the visitor arrived (referrer / UTM tags), filled in by the script below. -->
+    <input type="hidden" name="source" id="source" />
+
     <!-- Honeypot — real visitors never see or fill this in. -->
     <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
       <label for="company">Company</label>
@@ -160,6 +163,39 @@ const errored = url.searchParams.get('error') === '1';
 </style>
 
 <script>
+  // Lead source: where this visit came from, captured on the first page of the
+  // session (referrer host and UTM tags, no cookies) and sent with the enquiry.
+  const sourceField = document.getElementById('source') as HTMLInputElement | null;
+  if (sourceField) {
+    let source = '';
+    try {
+      source = sessionStorage.getItem('app62-source') ?? '';
+    } catch {
+      // Storage blocked: fall back to this page's own referrer/UTM below.
+    }
+    if (!source) {
+      const params = new URLSearchParams(location.search);
+      const utm = ['utm_source', 'utm_medium', 'utm_campaign']
+        .map((k) => params.get(k) && `${k.slice(4)}=${params.get(k)}`)
+        .filter(Boolean)
+        .join(', ');
+      let referrer = '';
+      try {
+        const host = document.referrer ? new URL(document.referrer).hostname : '';
+        if (host && host !== location.hostname) referrer = host.replace(/^www\./, '');
+      } catch {
+        // Malformed referrer: ignore.
+      }
+      source = [referrer, utm].filter(Boolean).join(' · ') || 'direct';
+      try {
+        sessionStorage.setItem('app62-source', source);
+      } catch {
+        // Not persisted; still used for this page.
+      }
+    }
+    sourceField.value = source.slice(0, 200);
+  }
+
   // Load Turnstile (~800 KB of third-party resources) only when the visitor
   // nears the contact form, not on page load. Its script renders any
   // .cf-turnstile placeholder it finds when it loads.
@@ -172,7 +208,7 @@ const errored = url.searchParams.get('error') === '1';
         const script = document.createElement('script');
         script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
         script.async = true;
-        document.head.append(script);
+        document.head.appendChild(script);
       },
       { rootMargin: '800px 0px' }
     );
@@ -215,7 +251,7 @@ const errored = url.searchParams.get('error') === '1';
           ? 'self-start max-w-[85%] rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-2.5 text-sm whitespace-pre-line'
           : 'self-end max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1a1a1a] text-white px-4 py-2.5 text-sm whitespace-pre-line';
       li.textContent = text;
-      log.append(li);
+      log.appendChild(li);
       scrollDown();
     };
 
@@ -225,7 +261,7 @@ const errored = url.searchParams.get('error') === '1';
         typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
         typing.setAttribute('aria-hidden', 'true');
         typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-        log.append(typing);
+        log.appendChild(typing);
         scrollDown();
         await wait(500);
         typing.remove();
@@ -320,7 +356,7 @@ const errored = url.searchParams.get('error') === '1';
       typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
       typing.setAttribute('aria-hidden', 'true');
       typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-      log.append(typing);
+      log.appendChild(typing);
       scrollDown();
 
       let ok = false;
