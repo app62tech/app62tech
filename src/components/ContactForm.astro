@@ -282,6 +282,7 @@ const errored = url.searchParams.get('error') === '1';
       scrollDown();
 
       let ok = false;
+      let limited = false;
       try {
         const response = await fetch(form.action, {
           method: 'POST',
@@ -290,6 +291,7 @@ const errored = url.searchParams.get('error') === '1';
         });
         const result = (await response.json().catch(() => null)) as { ok?: boolean } | null;
         ok = response.ok && !!result?.ok;
+        limited = response.status === 429;
       } catch {
         // Network error: `ok` stays false.
       }
@@ -304,7 +306,7 @@ const errored = url.searchParams.get('error') === '1';
       } else {
         // A Turnstile token is single-use; get a fresh one for the retry.
         (window as { turnstile?: { reset: () => void } }).turnstile?.reset();
-        await say(FAIL);
+        await say(limited ? "You've sent a few messages in a row — please wait a minute, then try again." : FAIL);
         offer(
           [
             { value: 'send', label: 'Try again' },

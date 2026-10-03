@@ -12,6 +12,16 @@
     "enabled": true,
   },
   "upload_source_maps": true,
+  // Burst protection for /api/contact: 3 submissions per minute per IP
+  // (Workers rate limiting allows only 10s/60s windows; counts are per
+  // Cloudflare location and approximate by design).
+  "ratelimits": [
+    {
+      "name": "CONTACT_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 60 },
+    },
+  ],
   // Secrets (TURNSTILE_SECRET_KEY, RESEND_API_KEY) are set in the Cloudflare
   // dashboard or via `wrangler secret put <NAME>` — never committed here.
   "vars": {

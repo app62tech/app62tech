@@ -20,7 +20,7 @@ metadata:
   openGraph:
     site_name: App62
     images:
-      - url: '~/assets/images/default.png'
+      - url: '~/assets/images/og-app62.png'
         width: 1200
         height: 628
     type: website

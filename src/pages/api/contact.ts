@@ -102,7 +102,18 @@ export const POST: APIRoute = async ({ request, locals, url, clientAddress }) =>
   }
 
   // Cloudflare env bindings/secrets (@astrojs/cloudflare runtime).
-  const env = (locals as { runtime?: { env?: Record<string, string | undefined> } })?.runtime?.env ?? {};
+  const runtimeEnv = (locals as { runtime?: { env?: Record<string, unknown> } })?.runtime?.env ?? {};
+  const env = runtimeEnv as Record<string, string | undefined>;
+
+  // Per-IP burst limit (binding configured in wrangler.jsonc). Checked after
+  // cheap validation so malformed requests don't use up a visitor's quota.
+  const limiter = runtimeEnv.CONTACT_LIMITER as
+    { limit: (options: { key: string }) => Promise<{ success: boolean }> } | undefined;
+  if (limiter) {
+    const ip = request.headers.get('cf-connecting-ip') ?? clientAddress ?? 'unknown';
+    const { success } = await limiter.limit({ key: ip });
+    if (!success) return wantsJson ? jsonResponse({ ok: false, reason: 'rate_limited' }, 429) : redirectTo(url, false);
+  }
 
   const turnstileSecret = env.TURNSTILE_SECRET_KEY;
   if (turnstileSecret) {

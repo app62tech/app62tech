@@ -1,11 +1,15 @@
 ---
 // Wraps AstroWind's Metadata.astro (title/description/canonical/OG/Twitter
-// via astro-seo) and adds the Organization + WebPage JSON-LD the PRD
-// requires (§17), which astro-seo doesn't emit on its own.
+// via astro-seo) and adds Organization (with services) + WebPage JSON-LD,
+// which astro-seo doesn't emit on its own.
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
 import Metadata from '~/components/common/Metadata.astro';
 import { SITE } from 'astrowind:config';
 import { getCanonical } from '~/utils/permalinks';
+import { footerData } from '~/navigation';
 import type { MetaData } from '~/types';
+import logo from '~/assets/images/app62-logo.png';
 
 export interface Props extends MetaData {
   dontUseTitleTemplate?: boolean;
@@ -14,11 +18,26 @@ export interface Props extends MetaData {
 const props = Astro.props;
 const canonical = String(getCanonical(String(Astro.url.pathname)));
 
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const logoImage = await getImage({ src: logo, width: 444, format: 'png' });
+
+// No address or area served yet — add them here once confirmed.
 const organizationLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: SITE?.name,
   url: SITE?.site,
+  email: 'hello@app62.tech',
+  logo: String(new URL(logoImage.src, SITE?.site)),
+  sameAs: footerData.socialLinks.map((l) => l.href),
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Services',
+    itemListElement: services.map((s) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: s.data.title, description: s.data.summary },
+    })),
+  },
 };
 
 const webPageLd = {
