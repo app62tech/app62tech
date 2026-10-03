@@ -137,7 +137,12 @@ const errored = url.searchParams.get('error') === '1';
     {
       turnstileSiteKey && (
         <div class="mt-4">
-          <div class="cf-turnstile" data-sitekey={turnstileSiteKey} />
+          <div
+            class="cf-turnstile"
+            data-sitekey={turnstileSiteKey}
+            data-appearance="interaction-only"
+            data-theme="light"
+          />
         </div>
       )
     }
@@ -298,7 +303,9 @@ const errored = url.searchParams.get('error') === '1';
       // instead of letting the server reject the message.
       const token = form.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]');
       if (form.querySelector('.cf-turnstile') && !token?.value) {
-        await say('One last step — please tick "Verify you are human" just below, then send.');
+        await say(
+          'One moment — we\'re checking you\'re not a bot. If a "Verify you are human" box appears below, tick it, then send.'
+        );
         offer(
           [
             { value: 'send', label: 'Send message' },
