@@ -277,6 +277,21 @@ const errored = url.searchParams.get('error') === '1';
     };
 
     const send = async () => {
+      // Turnstile not finished yet (e.g. it's showing the checkbox): say so
+      // instead of letting the server reject the message.
+      const token = form.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]');
+      if (form.querySelector('.cf-turnstile') && !token?.value) {
+        await say('One last step — please tick "Verify you are human" just below, then send.');
+        offer(
+          [
+            { value: 'send', label: 'Send message' },
+            { value: 'restart', label: 'Start over' },
+          ],
+          (v) => (v === 'send' ? send() : start())
+        );
+        return;
+      }
+
       const typing = document.createElement('div');
       typing.className = 'self-start rounded-2xl rounded-tl-sm bg-[#f7f1e9] px-4 py-3 flex gap-1';
       typing.setAttribute('aria-hidden', 'true');
