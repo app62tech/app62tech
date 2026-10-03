@@ -21,7 +21,9 @@ const canonical = String(getCanonical(String(Astro.url.pathname)));
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
 const logoImage = await getImage({ src: logo, width: 444, format: 'png' });
 
-// No address or area served yet — add them here once confirmed.
+// Markets App62 works in. No public address yet.
+const areaServed = ['United Arab Emirates', 'United States', 'India', 'European Union', 'United Kingdom'];
+
 const organizationLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
@@ -30,12 +32,13 @@ const organizationLd = {
   email: 'hello@app62.tech',
   logo: String(new URL(logoImage.src, SITE?.site)),
   sameAs: footerData.socialLinks.map((l) => l.href),
+  areaServed,
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Services',
     itemListElement: services.map((s) => ({
       '@type': 'Offer',
-      itemOffered: { '@type': 'Service', name: s.data.title, description: s.data.summary },
+      itemOffered: { '@type': 'Service', name: s.data.title, description: s.data.summary, areaServed },
     })),
   },
 };

@@ -148,8 +148,6 @@ const errored = url.searchParams.get('error') === '1';
   </form>
 </div>
 
-{turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
-
 <style>
   #contact-form.chat-mode [data-field] {
     display: none;
@@ -157,6 +155,25 @@ const errored = url.searchParams.get('error') === '1';
 </style>
 
 <script>
+  // Load Turnstile (~800 KB of third-party resources) only when the visitor
+  // nears the contact form, not on page load. Its script renders any
+  // .cf-turnstile placeholder it finds when it loads.
+  const turnstileSlot = document.querySelector<HTMLElement>('#contact-form .cf-turnstile');
+  if (turnstileSlot) {
+    const loadTurnstile = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        loadTurnstile.disconnect();
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        script.async = true;
+        document.head.append(script);
+      },
+      { rootMargin: '800px 0px' }
+    );
+    loadTurnstile.observe(turnstileSlot);
+  }
+
   const FAIL = "Sorry — that didn't go through. Please try again, or email hello@app62.tech.";
 
   const form = document.getElementById('contact-form') as HTMLFormElement | null;
