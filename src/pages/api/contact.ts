@@ -4,7 +4,14 @@ export const prerender = false;
 
 const MAX_LENGTHS = { name: 200, email: 320, message: 5000, service: 40, company: 200 };
 
-const ALLOWED_SERVICES = new Set(['ai-transformation', 'web', 'apps', 'ai-agents', 'automation', '']);
+const SERVICE_LABELS: Record<string, string> = {
+  'ai-transformation': 'AI transformation',
+  web: 'Web',
+  apps: 'Apps',
+  'ai-agents': 'AI agents',
+  automation: 'Automation',
+};
+const ALLOWED_SERVICES = new Set([...Object.keys(SERVICE_LABELS), '']);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -35,10 +42,11 @@ async function sendEmail(
   fields: { name: string; email: string; service: string; message: string }
 ) {
   const apiKey = env.RESEND_API_KEY;
+  // Delivered by Resend into the Zoho Mail inbox; Reply goes to the visitor.
   const to = env.CONTACT_TO_EMAIL || 'hello@app62.tech';
+  const service = SERVICE_LABELS[fields.service] ?? '';
 
-  // Resend account/API key not yet provisioned (PRD §9 blocker) — fail loudly
-  // in logs instead of silently dropping submissions once it's added.
+  // Fail loudly in logs rather than silently dropping submissions.
   if (!apiKey) {
     console.error('RESEND_API_KEY is not configured — contact submission was not emailed.');
     return false;
@@ -51,14 +59,16 @@ async function sendEmail(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: env.CONTACT_FROM_EMAIL || 'App62 site <onboarding@resend.dev>',
+      // Must be on a domain verified in Resend (app62.tech).
+      from: env.CONTACT_FROM_EMAIL || 'App62 website <hello@app62.tech>',
       to: [to],
       reply_to: fields.email,
-      subject: `New enquiry from ${fields.name}${fields.service ? ` (${fields.service})` : ''}`,
-      text: `From: ${fields.name} <${fields.email}>\nService: ${fields.service || 'not specified'}\n\n${fields.message}`,
+      subject: `New enquiry from ${fields.name}${service ? ` (${service})` : ''}`,
+      text: `From: ${fields.name} <${fields.email}>\nService: ${service || 'not specified'}\n\n${fields.message}`,
     }),
   });
 
+  if (!res.ok) console.error(`Resend rejected the contact email: ${res.status} ${await res.text()}`);
   return res.ok;
 }
 

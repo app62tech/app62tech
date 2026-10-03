@@ -6,5 +6,4 @@ whatWasBuilt: 'An AI tool that reads photos of a paper menu and builds a shareab
 surfaces: 'iOS application for the restaurant owner, with a shareable web menu for guests — no app download required on their side.'
 outcome: 'Shipped and live on the App Store, free with in-app purchases.'
 appStoreUrl: 'https://apps.apple.com/us/app/menu-gen-ai/id6788246741'
-screenshots: []
 ---

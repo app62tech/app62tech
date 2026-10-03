@@ -12,9 +12,11 @@
     "enabled": true,
   },
   "upload_source_maps": true,
-  // Secrets (TURNSTILE_SECRET_KEY, RESEND_API_KEY) are set via
-  // `wrangler secret put <NAME>` — never committed here.
+  // Secrets (TURNSTILE_SECRET_KEY, RESEND_API_KEY) are set in the Cloudflare
+  // dashboard or via `wrangler secret put <NAME>` — never committed here.
   "vars": {
     "TURNSTILE_SITE_KEY": "",
+    "CONTACT_TO_EMAIL": "hello@app62.tech",
+    "CONTACT_FROM_EMAIL": "App62 website <hello@app62.tech>",
   },
 }

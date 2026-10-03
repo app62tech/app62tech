@@ -17,7 +17,7 @@ Submitting the contact form sends an email to App62; it does not commit either p
 
 ## Content on this site
 
-The case study, service descriptions, and other content here describe real work and real offerings as accurately as we can. If you spot something inaccurate, tell us at [hello@app62.tech](mailto:hello@app62.tech).
+The work examples, service descriptions, and other content here describe real work and real offerings as accurately as we can. If you spot something inaccurate, tell us at [hello@app62.tech](mailto:hello@app62.tech).
 
 ## Liability [PLACEHOLDER]
 

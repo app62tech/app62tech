@@ -1,64 +1,57 @@
-# Astro Starter Kit: Blog
+# app62.tech
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/astro-blog-starter-template)
+The App62 marketing site: a single landing page led by AI transformation, with
+development services, shipped work, and a contact form.
 
-![Astro Template Preview](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+Built with Astro and Tailwind CSS, deployed to Cloudflare Workers. Every page is
+prerendered; only `/api/contact` runs on the server.
 
-<!-- dash-content-start -->
+## Develop
 
-Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+Requires Node 22 (see `.nvmrc`).
 
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-- ✅ Built-in Observability logging
-
-<!-- dash-content-end -->
-
-## Getting Started
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/astro-blog-starter-template
+```sh
+npm ci
+npm run dev        # http://localhost:4321
 ```
 
-A live public deployment of this template is available at [https://astro-blog-starter-template.templates.workers.dev](https://astro-blog-starter-template.templates.workers.dev)
+## Check
 
-## 🚀 Project Structure
+```sh
+npm run build          # static build into dist/
+npm run check          # astro check + wrangler dry run
+npm run check:eslint
+npm run check:prettier
+npm run test:a11y      # axe on every route in scripts/check-a11y.mjs (run after build)
+```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Lighthouse budgets live in `.lighthouserc.json` (mobile: performance ≥ 0.95,
+accessibility = 1, JS ≤ 10 KB, total ≤ 400 KB).
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Where things live
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+| What                     | Where                                                          |
+| ------------------------ | -------------------------------------------------------------- |
+| Home page (all sections) | `src/pages/index.astro`                                        |
+| Service copy             | `src/data/services/*.md`                                       |
+| Shipped apps             | `src/data/work/*.md`, screenshots in `src/assets/images/work/` |
+| Nav and footer links     | `src/navigation.ts`                                            |
+| Brand colours and fonts  | `src/components/CustomStyles.astro`                            |
+| Contact form / API       | `src/components/ContactForm.astro`, `src/pages/api/contact.ts` |
+| Old URL redirects        | `redirects` in `astro.config.ts`                               |
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Contact form
 
-## 🧞 Commands
+Submissions are sent by [Resend](https://resend.com) into the Zoho Mail inbox
+(`hello@app62.tech`) with Reply-To set to the visitor, and protected by
+Cloudflare Turnstile. Set these on the Worker:
 
-All commands are run from the root of the project, from a terminal:
+- Secrets (`wrangler secret put <NAME>`): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`
+- Vars (in `wrangler.jsonc`): `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` (must be on the Resend-verified domain)
+- Build-time: `PUBLIC_TURNSTILE_SITE_KEY` (see `.env.example`)
 
-| Command                           | Action                                           |
-| :-------------------------------- | :----------------------------------------------- |
-| `npm install`                     | Installs dependencies                            |
-| `npm run dev`                     | Starts local dev server at `localhost:4321`      |
-| `npm run build`                   | Build your production site to `./dist/`          |
-| `npm run preview`                 | Preview your build locally, before deploying     |
-| `npm run astro ...`               | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help`         | Get help using the Astro CLI                     |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare        |
-| `npm wrangler tail`               | View real-time logs for all Workers              |
+## Deploy
 
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+```sh
+npm run deploy     # wrangler deploy
+```

@@ -47,15 +47,14 @@ const metadataDefinition = () =>
     })
     .optional();
 
-// One entry per offering (PRD §7.2). `order` controls display order on the
-// Home and Services pages. Copy must come from the PRD verbatim — no
-// invented differentiators.
+// One entry per offering. `order` controls display order on the home page.
+// No invented differentiators.
 const servicesCollection = defineCollection({
   loader: glob({ pattern: '*.md', base: 'src/data/services' }),
   schema: z.object({
     title: z.string(),
-    summary: z.string(), // short card copy (Home)
-    description: z.string(), // full copy (Services page)
+    summary: z.string(), // short copy (hero, service cards)
+    description: z.string(), // long copy
     suitsWho: z.string(), // "who it suits"
     icon: z.string(),
     order: z.number(),
@@ -65,9 +64,8 @@ const servicesCollection = defineCollection({
   }),
 });
 
-// One entry per case study — only Clique exists at launch (PRD §7.3, §11).
-// No invented metrics/testimonials; `screenshots` stays empty until real
-// assets are supplied.
+// One entry per shipped app, shown in the home page's Work grid (screenshots
+// are imported there). No invented metrics/testimonials.
 const workCollection = defineCollection({
   loader: glob({ pattern: '*.md', base: 'src/data/work' }),
   schema: z.object({
@@ -79,7 +77,6 @@ const workCollection = defineCollection({
     outcome: z.string(),
     siteUrl: z.string().url().optional(),
     appStoreUrl: z.string().url().optional(),
-    screenshots: z.array(z.string()).default([]),
     metadata: metadataDefinition(),
   }),
 });

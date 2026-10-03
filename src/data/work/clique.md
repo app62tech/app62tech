@@ -7,5 +7,4 @@ surfaces: 'iOS application and marketing site.'
 outcome: 'Shipped and live on the App Store.'
 siteUrl: 'https://cliqueuae.com'
 appStoreUrl: 'https://apps.apple.com/app/id6742786439'
-screenshots: []
 ---
