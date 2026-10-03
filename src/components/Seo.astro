@@ -50,6 +50,8 @@ const webPageLd = {
 ---
 
 <Metadata {...props} />
+<!-- Not part of the Open Graph spec (crawlers ignore it), but some SEO checkers look for it. -->
+<meta property="og:logo" content={organizationLd.logo} />
 <script type="application/ld+json" set:html={JSON.stringify(organizationLd)} />
 <script type="application/ld+json" set:html={JSON.stringify(webPageLd)} />
 <slot />
