@@ -72,7 +72,7 @@
 }
 
 #header.scroll > div:first-child {
-  @apply bg-page md:bg-white/90 md:backdrop-blur-md;
+  @apply bg-page md:bg-[#fefcf8]/90 md:backdrop-blur-md;
   box-shadow: 0 0.375rem 1.5rem 0 rgb(140 152 164 / 13%);
 }
 .dark #header.scroll > div:first-child,
@@ -83,7 +83,7 @@
 
 #header.expanded nav {
   position: fixed;
-  top: 70px;
+  top: 92px;
   left: 0;
   right: 0;
   bottom: 70px !important;
@@ -120,4 +120,13 @@
 
 .aw-link-active {
   @apply text-accent font-semibold;
+}
+
+.aw-nav-link {
+  @apply hover:text-accent md:hover:bg-[#f7f1e9];
+}
+
+/* Scroll-spy: the section currently in view (in-page nav). */
+.aw-nav-link.aw-section-active {
+  @apply text-accent md:text-white md:bg-[#1a1a1a] md:hover:bg-[#1a1a1a];
 }

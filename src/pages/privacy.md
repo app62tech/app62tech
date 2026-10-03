@@ -11,7 +11,7 @@ This site is deliberately small: four pages, one form, no accounts, no database.
 
 ## What we collect
 
-**Contact form.** If you submit the contact form at `/contact`, we collect your name, email address, the message you write, and optionally which service you're asking about. That submission is sent as an email to our inbox via [Resend](https://resend.com), a transactional email provider. We do not store submissions in a database — once the email is sent, the only copy that exists is in our inbox.
+**Contact form.** If you submit the contact form on our home page, we collect your name, email address, the message you write, and optionally which service you're asking about. That submission is sent as an email to our inbox via [Resend](https://resend.com), a transactional email provider. We do not store submissions in a database — once the email is sent, the only copy that exists is in our inbox.
 
 **Analytics.** We use [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) to see how many people visit the site and which pages they read. It does not use cookies or any persistent identifier, and does not track you across other sites. No consent banner is shown because none is required for this kind of measurement.
 

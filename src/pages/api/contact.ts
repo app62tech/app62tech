@@ -4,16 +4,16 @@ export const prerender = false;
 
 const MAX_LENGTHS = { name: 200, email: 320, message: 5000, service: 40, company: 200 };
 
-const ALLOWED_SERVICES = new Set(['web', 'apps', 'ai-agents', 'automation', '']);
+const ALLOWED_SERVICES = new Set(['ai-transformation', 'web', 'apps', 'ai-agents', 'automation', '']);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
 function redirectTo(url: URL, ok: boolean) {
-  const dest = new URL('/contact', url);
+  const dest = new URL('/', url);
   dest.searchParams.set(ok ? 'sent' : 'error', ok ? 'true' : '1');
-  return new Response(null, { status: 303, headers: { Location: dest.pathname + dest.search } });
+  return new Response(null, { status: 303, headers: { Location: `${dest.pathname}${dest.search}#contact` } });
 }
 
 async function verifyTurnstile(token: string, secret: string, ip: string | null): Promise<boolean> {

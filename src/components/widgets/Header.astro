@@ -59,7 +59,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
     <div class="absolute inset-0"></div>
     <div
       class:list={[
-        'relative text-default py-3 px-3 md:px-6 mx-auto w-full',
+        'relative text-default py-2 px-3 md:px-6 mx-auto w-full',
         {
           'md:flex md:justify-between': position !== 'center',
         },
@@ -80,11 +80,11 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
         </div>
       </div>
       <nav
-        class="items-center w-full md:w-auto hidden md:flex md:mx-5 text-default overflow-y-auto overflow-x-hidden md:overflow-visible md:justify-self-center"
+        class="items-center w-full md:w-auto hidden md:flex md:mx-5 text-default overflow-y-auto overflow-x-hidden md:overflow-visible md:justify-self-center md:rounded-full md:bg-white/80 md:border md:border-black/5 md:shadow-sm md:p-1"
         aria-label="Main navigation"
       >
         <ul
-          class="flex flex-col md:flex-row md:self-center w-full md:w-auto text-xl md:text-[0.9375rem] tracking-[0.01rem] font-medium md:justify-center"
+          class="flex flex-col md:flex-row md:self-center w-full md:w-auto text-xl md:text-sm tracking-[0.01rem] font-medium md:justify-center md:gap-0.5"
         >
           {
             links.map(({ text, href, links }) => (
@@ -117,7 +117,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
                 ) : (
                   <a
                     class:list={[
-                      'hover:text-accent px-4 py-3 flex items-center whitespace-nowrap',
+                      'aw-nav-link px-4 py-3 md:py-2 flex items-center whitespace-nowrap md:rounded-full transition-colors',
                       { 'aw-link-active': href === currentPath },
                     ]}
                     href={href}
@@ -155,7 +155,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
             actions?.length ? (
               <span class="ml-4 rtl:ml-0 rtl:mr-4">
                 {actions.map((btnProps) => (
-                  <Button {...btnProps} class="ml-2 py-2.5 px-5.5 md:px-6 font-semibold shadow-none text-sm w-auto" />
+                  <Button {...btnProps} class="ml-2 py-2.5 px-5 font-semibold shadow-none text-sm w-auto gap-1" />
                 ))}
               </span>
             ) : (
@@ -177,10 +177,12 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
 <script>
   class AwHeader extends HTMLElement {
     private onScroll?: () => void;
+    private spy?: IntersectionObserver;
     private mql?: MediaQueryList;
     private onMqlChange?: () => void;
     private onPageLoad = () => {
       this.updateActiveLinks();
+      this.watchSections();
       this.closeOpenDropdown();
     };
 
@@ -194,6 +196,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
       // the server-rendered `aw-link-active` class would go stale. Re-compute it
       // on every navigation (astro:page-load fires on load and after each swap).
       this.updateActiveLinks();
+      this.watchSections();
       document.addEventListener('astro:page-load', this.onPageLoad);
 
       const closeMenu = () => {
@@ -241,6 +244,8 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
         const applyStyles = () => {
           if (window.scrollY > 60) header.classList.add('scroll');
           else header.classList.remove('scroll');
+          // Back at the hero: no section is current.
+          if (window.scrollY < 200) this.markSection(null);
           ticking = false;
         };
         this.onScroll = () => {
@@ -258,6 +263,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
 
     disconnectedCallback() {
       if (this.onScroll) document.removeEventListener('scroll', this.onScroll);
+      this.spy?.disconnect();
       if (this.mql && this.onMqlChange) this.mql.removeEventListener('change', this.onMqlChange);
       document.removeEventListener('astro:page-load', this.onPageLoad);
     }
@@ -270,11 +276,38 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
       if (active && this.contains(active) && active.closest('.dropdown')) active.blur();
     }
 
+    // Highlights the nav link for the section crossing the middle of the viewport.
+    private watchSections() {
+      this.spy?.disconnect();
+      const ids = [...this.querySelectorAll<HTMLAnchorElement>('nav a[href*="#"]')]
+        .map((a) => new URL(a.href).hash.slice(1))
+        .filter((id) => document.getElementById(id));
+      if (!ids.length) return;
+      this.spy = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) if (entry.isIntersecting) this.markSection(entry.target.id);
+        },
+        { rootMargin: '-45% 0px -50% 0px' }
+      );
+      ids.forEach((id) => this.spy!.observe(document.getElementById(id)!));
+    }
+
+    private markSection(id: string | null) {
+      this.querySelectorAll<HTMLAnchorElement>('nav a[href*="#"]').forEach((a) => {
+        const isCurrent = id !== null && new URL(a.href).hash === `#${id}`;
+        a.classList.toggle('aw-section-active', isCurrent);
+        if (isCurrent) a.setAttribute('aria-current', 'location');
+        else if (a.getAttribute('aria-current') === 'location') a.removeAttribute('aria-current');
+      });
+    }
+
     private updateActiveLinks() {
       const norm = (p: string) => '/' + p.replace(/^\/+|\/+$/g, '');
       const current = norm(window.location.pathname);
       this.querySelectorAll<HTMLAnchorElement>('nav a[href]').forEach((a) => {
-        const isActive = norm(new URL(a.href).pathname) === current;
+        // In-page section links (`/#work`) all share a pathname, so they never mark the page active.
+        const url = new URL(a.href);
+        const isActive = !url.hash && norm(url.pathname) === current;
         a.classList.toggle('aw-link-active', isActive);
         if (isActive) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');

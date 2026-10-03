@@ -17,6 +17,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   site: 'https://app62.tech',
 
+  // The site is a single page; old multi-page URLs land on their section.
+  redirects: {
+    '/services': '/#services',
+    '/contact': '/#contact',
+    '/work': '/#work',
+    '/work/clique': '/#work',
+    '/work/cardlynk': '/#work',
+    '/work/menu-gen-ai': '/#work',
+    '/work/vetra': '/#work',
+  },
+
   // Default 'static' output — every page prerenders to a static file served
   // straight from the assets binding. Only the contact API route opts out
   // via `export const prerender = false`, which is what triggers the Worker

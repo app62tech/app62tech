@@ -2,14 +2,7 @@
   "ci": {
     "collect": {
       "staticDistDir": "./dist",
-      "url": [
-        "/index.html",
-        "/services/index.html",
-        "/work/index.html",
-        "/work/clique/index.html",
-        "/work/cardlynk/index.html",
-        "/contact/index.html"
-      ],
+      "url": ["/index.html"],
       "numberOfRuns": 1,
       "settings": {
         "formFactor": "mobile",

@@ -59,6 +59,8 @@ const servicesCollection = defineCollection({
     suitsWho: z.string(), // "who it suits"
     icon: z.string(),
     order: z.number(),
+    page: z.string().optional(), // has its own page/section; not listed with the development services
+    partOf: z.string().optional(), // id of an umbrella service this one is delivered within
     metadata: metadataDefinition(),
   }),
 });

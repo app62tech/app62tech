@@ -1,103 +1,526 @@
 ---
 import { getCollection } from 'astro:content';
+import type { ImageMetadata } from 'astro';
+import { Icon } from 'astro-icon/components';
 
 import Layout from '~/layouts/PageLayout.astro';
-import Hero from '~/components/widgets/Hero.astro';
-import Features from '~/components/widgets/Features.astro';
-import Content from '~/components/widgets/Content.astro';
-import Steps from '~/components/widgets/Steps.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
-import { getPermalink } from '~/utils/permalinks';
-import cliqueScreenshots from '~/assets/images/work/clique-screenshots.png';
+import ContactForm from '~/components/ContactForm.astro';
+import Image from '~/components/common/Image.astro';
+
+import menuGen1 from '~/assets/images/work/menu-gen-ai-1.webp';
+import menuGen2 from '~/assets/images/work/menu-gen-ai-2.webp';
+import menuGen3 from '~/assets/images/work/menu-gen-ai-3.webp';
+import vetra1 from '~/assets/images/work/vetra-1.webp';
+import vetra2 from '~/assets/images/work/vetra-2.webp';
+import cliqueWelcome from '~/assets/images/work/clique-app-welcome.png';
+import cliqueMessages from '~/assets/images/work/clique-app-messages.png';
+import cardlynkShots from '~/assets/images/work/cardlynk-screenshots.png';
 
 export const prerender = true;
 
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
-const [clique] = await getCollection('work');
+const transformation = services.find((s) => s.id === 'ai-transformation')!;
+// Everything without its own section is a development service.
+const development = services.filter((s) => !s.data.page);
+const work = new Map((await getCollection('work')).map((w) => [w.id, w]));
+
+const icons = import.meta.glob<{ default: ImageMetadata }>('~/assets/images/work/*-{icon,logo}.png', { eager: true });
+const iconFor = (id: string) => Object.entries(icons).find(([path]) => path.includes(`/${id}-`))?.[1]?.default;
+
+// Bento layout: the AI builds get the big tiles. `phones` render in a device
+// frame; `wide` is a pre-composed screenshot strip shown as-is.
+const tiles: {
+  id: string;
+  span: string;
+  phones?: { src: ImageMetadata; alt: string }[];
+  wide?: { src: ImageMetadata; alt: string };
+}[] = [
+  {
+    id: 'menu-gen-ai',
+    span: 'lg:col-span-2',
+    phones: [
+      { src: menuGen1, alt: 'Menu Gen AI: scanning a paper menu' },
+      { src: menuGen2, alt: 'Menu Gen AI: generated digital menu' },
+      { src: menuGen3, alt: 'Menu Gen AI: guest AI assistant' },
+    ],
+  },
+  {
+    id: 'vetra',
+    span: '',
+    phones: [
+      { src: vetra1, alt: 'Vetra: daily readiness score' },
+      { src: vetra2, alt: 'Vetra: AI health coach chat' },
+    ],
+  },
+  {
+    id: 'cardlynk',
+    span: '',
+    wide: { src: cardlynkShots, alt: 'CardLynk: digital business card in Apple Wallet' },
+  },
+  {
+    id: 'clique',
+    span: 'lg:col-span-2',
+    phones: [
+      { src: cliqueWelcome, alt: 'Clique: welcome screen' },
+      { src: cliqueMessages, alt: 'Clique: messages with training partners' },
+    ],
+  },
+];
+
+const steps = [
+  {
+    title: 'Evaluate',
+    description: 'Map how work actually gets done — the workflows, the tools, and where the time goes.',
+    visual: 'map',
+  },
+  {
+    title: 'Find opportunities',
+    description: 'A prioritised list of where AI makes a real difference, weighed by impact, effort, and risk.',
+    visual: 'matrix',
+  },
+  {
+    title: 'Design the solution',
+    description: 'Existing tools first, then internal tools, and new tools only where there is a genuine gap.',
+    visual: 'layers',
+  },
+  {
+    title: 'Build & integrate',
+    description: 'Agents and automation wired into your stack, with human review where consequences warrant it.',
+    visual: 'agent',
+  },
+  {
+    title: 'Educate',
+    description: 'Hands-on training, internal docs, and playbooks so your team owns what we ship.',
+    visual: 'training',
+  },
+];
+
+const deliverables = [
+  { title: 'Workflow map', description: 'How work flows through your team and tools today.', icon: 'tabler:map-2' },
+  {
+    title: 'Opportunity report',
+    description: 'Ranked AI opportunities with impact, effort, and risk.',
+    icon: 'tabler:file-analytics',
+  },
+  {
+    title: 'Solution design',
+    description: 'What to configure, what to build, and how it connects.',
+    icon: 'tabler:sitemap',
+  },
+  { title: 'Working tools', description: 'Configured tools and agents, shipped and integrated.', icon: 'tabler:tools' },
+  { title: 'Team training', description: 'Sessions and written material your team keeps.', icon: 'tabler:school' },
+  { title: 'Next-steps roadmap', description: 'What to tackle next, in order.', icon: 'tabler:road' },
+];
 
 const metadata = {
-  title: 'Web, mobile, and AI engineering',
-  description: 'App62 is a technology services company offering web, mobile, and AI engineering work.',
+  title: 'AI transformation — App62',
+  description:
+    'App62 helps teams adopt AI end to end — workflow evaluation, the right tools, and training — and also builds web, mobile, and AI software.',
   ignoreTitleTemplate: true,
 };
+
+const eyebrow = 'text-sm text-accent font-bold tracking-widest uppercase mb-2';
+const h2 = 'text-3xl md:text-5xl font-bold font-heading text-heading tracking-tight';
 ---
 
 <Layout metadata={metadata}>
-  <!-- Headline paraphrases the PRD's own positioning statement (§1) —
-       exact wording pending final client sign-off. -->
-  <Hero tagline="App62" actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}>
-    <Fragment slot="title">
-      Web, mobile, and <span class="text-primary">AI engineering</span>.
-    </Fragment>
-    <Fragment slot="subtitle">
-      A technology services company offering web, mobile, and AI engineering work — audits, apps, custom agents, and the
-      automation to connect them.
-    </Fragment>
-  </Hero>
+  <!-- Hero ****************************** -->
+  <!-- AI transformation is the lead offering. Copy drafted from the service
+       brief — pending final client sign-off. -->
+  <section class="relative overflow-hidden">
+    <div class="glow hidden lg:block -top-32 -right-24 w-[520px] h-[520px] bg-[#ff5757]/25" aria-hidden="true"></div>
+    <div class="glow hidden lg:block -bottom-48 left-1/3 w-[420px] h-[420px] bg-[#ffb38a]/30" aria-hidden="true"></div>
 
-  <!-- Services ************************ -->
+    <div
+      class="relative max-w-6xl mx-auto px-4 md:px-6 pt-8 pb-16 md:pt-12 md:pb-24 grid lg:grid-cols-2 gap-14 items-center"
+    >
+      <div>
+        <h1 class="text-5xl md:text-6xl font-bold font-heading leading-[1.05] tracking-tighter text-heading">
+          <span class="text-primary">AI transformation</span> for your team.
+        </h1>
+        <p class="mt-6 text-xl text-muted max-w-xl">{transformation.data.summary}</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#contact" class="btn-primary">Get in touch</a>
+          <a href="#how-it-works" class="btn-secondary bg-white">See how it works</a>
+        </div>
+      </div>
 
-  <Features
-    id="services"
-    tagline="Services"
-    title="What we do"
-    columns={2}
-    items={services.map((s) => ({
-      title: s.data.title,
-      description: s.data.summary,
-      icon: s.data.icon,
-      callToAction: { text: 'Learn more', href: `${getPermalink('/services')}#${s.id}`, variant: 'link' },
-    }))}
-  />
+      <!-- Illustration: scattered tools → one AI-assisted flow with a human
+           review step. Decorative; the copy carries the meaning. -->
+      <div class="relative h-[340px] sm:h-[400px] mx-2 sm:mx-6" aria-hidden="true">
+        <div class="absolute inset-0 rounded-3xl bg-white/80 border border-black/5 shadow-xl">
+          <svg viewBox="0 0 440 400" class="w-full h-full" fill="none">
+            <g font-family="Inter Variable, sans-serif" font-size="13" font-weight="500" fill="#1a1a1a">
+              {
+                (
+                  [
+                    ['Email', 90],
+                    ['Spreadsheets', 160],
+                    ['CRM', 230],
+                    ['Docs', 300],
+                  ] as const
+                ).map(([label, y]) => (
+                  <g>
+                    <rect x="24" y={y - 18} width="112" height="36" rx="18" fill="#f7f1e9" stroke="#e7ded3" />
+                    <text x="80" y={y + 5} text-anchor="middle">
+                      {label}
+                    </text>
+                    <path
+                      class="flow"
+                      fill="none"
+                      d={`M136 ${y} C 190 ${y}, 190 195, 232 195`}
+                      stroke="#ff5757"
+                      stroke-width="2"
+                      stroke-dasharray="6 6"
+                    />
+                  </g>
+                ))
+              }
+              <circle cx="270" cy="195" r="36" fill="#ff5757"></circle>
+              <circle
+                cx="270"
+                cy="195"
+                r="48"
+                fill="none"
+                stroke="#ff5757"
+                stroke-opacity=".25"
+                stroke-width="8"
+                class="pulse"></circle>
+              <path d="M270 177l5 11 11 5-11 5-5 11-5-11-11-5 11-5z" fill="#fff"></path>
+              <text x="270" y="258" text-anchor="middle" font-size="12" fill="#525252">AI agent</text>
+              <path class="flow" fill="none" d="M306 195 H 360" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="6 6"
+              ></path>
+              <circle cx="384" cy="195" r="24" fill="#1a1a1a"></circle>
+              <path d="M374 195l7 7 13-14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+              ></path>
+              <text x="384" y="240" text-anchor="middle" font-size="12" fill="#525252">Your team</text>
+            </g>
+          </svg>
+        </div>
 
-  <!-- Featured work: Clique *********** -->
+        <div
+          class="float absolute -top-6 -right-2 sm:-right-8 w-60 rounded-2xl bg-white shadow-lg border border-black/5 p-4"
+        >
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <span class="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
+              <Icon name="tabler:sparkles" class="w-3.5 h-3.5 text-accent" />
+            </span>
+            Agent · just now
+          </div>
+          <p class="mt-2 text-sm">Replies drafted for this morning's enquiries. Two are flagged for your review.</p>
+          <div class="mt-3 flex gap-2 text-xs font-semibold">
+            <span class="rounded-full bg-[#1a1a1a] text-white px-3 py-1">Review</span>
+            <span class="rounded-full border border-gray-300 px-3 py-1">Later</span>
+          </div>
+        </div>
 
-  {
-    clique && (
-      <Content
-        isReversed
-        tagline="Featured work"
-        title={clique.data.title}
-        content={`${clique.data.problem} ${clique.data.whatWasBuilt} ${clique.data.outcome}`}
-        callToAction={{ text: 'See our work', href: getPermalink('/work') }}
-        image={{
-          src: cliqueScreenshots,
-          alt: 'Clique App Store screenshots: Find Your Crowd, Start Instantly, Connect, and Meet in Real Life',
-        }}
-      />
-    )
-  }
+        <div
+          class="float float-delay absolute -bottom-6 -left-2 sm:-left-8 w-56 rounded-2xl bg-white shadow-lg border border-black/5 p-4"
+        >
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <Icon name="tabler:circle-check" class="w-5 h-5 text-accent shrink-0" />
+            Invoices matched to orders
+          </div>
+          <div class="mt-3 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <div class="h-full w-4/5 rounded-full bg-primary"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <!-- Process ************************* -->
+  <!-- How it works ********************** -->
 
-  <!-- Generic engagement outline — placeholder, pending confirmed process copy. -->
-  <Steps
-    tagline="Process"
-    title="How an engagement runs"
-    items={[
+  <section id="how-it-works" class="scroll-mt-[72px] bg-white border-y border-black/5">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20">
+      <p class={eyebrow}>How it works</p>
+      <h2 class={h2}>From workflow to working tools</h2>
+      <p class="mt-3 text-lg text-muted max-w-2xl">
+        Five steps, one engagement. Each step ends with something you can see and use.
+      </p>
+
+      <ol class="mt-10 grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {
+          steps.map((step, i) => (
+            <li class="rounded-2xl bg-[#f7f1e9] border border-black/5 p-4 flex flex-col">
+              <div class="h-24 rounded-xl bg-white border border-black/5 mb-4 p-2" aria-hidden="true">
+                {step.visual === 'map' && (
+                  <svg viewBox="0 0 160 80" class="w-full h-full" fill="none">
+                    <path d="M24 40H64M64 40L96 18M64 40L96 62M96 18H136M96 62H136" stroke="#d4cabd" stroke-width="2" />
+                    <circle cx="24" cy="40" r="8" fill="#e7ded3" />
+                    <circle cx="64" cy="40" r="8" fill="#e7ded3" />
+                    <circle cx="96" cy="18" r="8" fill="#e7ded3" />
+                    <circle cx="96" cy="62" r="8" fill="#ff5757" />
+                    <circle cx="96" cy="62" r="13" stroke="#ff5757" stroke-opacity=".35" stroke-width="3" />
+                    <circle cx="136" cy="18" r="8" fill="#e7ded3" />
+                    <circle cx="136" cy="62" r="8" fill="#e7ded3" />
+                  </svg>
+                )}
+                {step.visual === 'matrix' && (
+                  <svg viewBox="0 0 160 80" class="w-full h-full" fill="none">
+                    <rect x="34" y="4" width="60" height="34" rx="4" fill="#ff5757" fill-opacity=".15" />
+                    <path d="M34 4V76H154M94 4V76M34 40H154" stroke="#d4cabd" stroke-width="1.5" />
+                    <circle cx="56" cy="20" r="6" fill="#ff5757" />
+                    <circle cx="76" cy="28" r="5" fill="#ff5757" fill-opacity=".7" />
+                    <circle cx="120" cy="22" r="5" fill="#bfb3a5" />
+                    <circle cx="66" cy="58" r="4" fill="#bfb3a5" />
+                    <circle cx="132" cy="60" r="4" fill="#bfb3a5" />
+                    <text x="22" y="56" font-size="9" fill="#525252" transform="rotate(-90 22 56)">
+                      Impact
+                    </text>
+                    <text x="128" y="74" font-size="9" fill="#525252" text-anchor="middle">
+                      Effort
+                    </text>
+                  </svg>
+                )}
+                {step.visual === 'layers' && (
+                  <div class="h-full flex flex-col justify-center gap-1.5 text-[10px] font-semibold">
+                    <div class="rounded-md bg-[#1a1a1a] text-white px-2 py-1 w-full">Existing tools</div>
+                    <div class="rounded-md bg-primary/80 text-[#1a1a1a] px-2 py-1 w-3/4">Internal tools</div>
+                    <div class="rounded-md border border-dashed border-gray-400 px-2 py-1 w-1/2">New tools</div>
+                  </div>
+                )}
+                {step.visual === 'agent' && (
+                  <div class="h-full flex flex-col justify-center gap-1.5 text-[10px]">
+                    <div class="self-start rounded-lg rounded-bl-none bg-[#f7f1e9] px-2 py-1">
+                      Draft ready for review
+                    </div>
+                    <div class="self-end flex gap-1 font-semibold">
+                      <span class="rounded-full bg-[#1a1a1a] text-white px-2 py-0.5">Approve</span>
+                      <span class="rounded-full border border-gray-300 px-2 py-0.5">Edit</span>
+                    </div>
+                  </div>
+                )}
+                {step.visual === 'training' && (
+                  <div class="h-full rounded-lg bg-[#f7f1e9] p-2 flex gap-2 items-center">
+                    <span class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                      <Icon name="tabler:player-play-filled" class="w-4 h-4 text-white" />
+                    </span>
+                    <div class="flex-1 space-y-1.5">
+                      <div class="h-1.5 rounded bg-gray-300 w-full" />
+                      <div class="h-1.5 rounded bg-gray-300 w-3/4" />
+                      <div class="h-1.5 rounded bg-gray-300 w-1/2" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <p class="text-xs font-bold text-accent tracking-widest">STEP {i + 1}</p>
+              <h3 class="mt-1 font-bold font-heading text-lg text-heading">{step.title}</h3>
+              <p class="mt-1 text-sm text-muted">{step.description}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Deliverables + who it suits ******* -->
+
+  <section id="deliverables" class="scroll-mt-[72px]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="md:col-span-2 lg:col-span-3 mb-4">
+        <p class={eyebrow}>What you get</p>
+        <h2 class={h2}>Deliverables, not slide decks</h2>
+      </div>
       {
-        title: '1. <span class="font-medium">Scope</span>',
-        description: 'Define the one job, deliverable, or audit precisely before any work starts.',
-        icon: 'tabler:target-arrow',
-      },
-      {
-        title: '2. <span class="font-medium">Build</span>',
-        description: 'Work happens in the open — you see progress as it lands, not just at the end.',
-        icon: 'tabler:hammer',
-      },
-      {
-        title: '3. <span class="font-medium">Review</span>',
-        description: 'You get a working result and a clear list of what to do next.',
-        icon: 'tabler:checklist',
-      },
-    ]}
-  />
+        deliverables.map((d) => (
+          <div class="rounded-2xl bg-white border border-black/5 p-5 flex gap-4 items-start shadow-sm">
+            <span class="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Icon name={d.icon} class="w-6 h-6 text-accent" aria-hidden="true" />
+            </span>
+            <div>
+              <h3 class="font-bold text-heading">{d.title}</h3>
+              <p class="text-sm text-muted mt-0.5">{d.description}</p>
+            </div>
+          </div>
+        ))
+      }
+      <div
+        class="md:col-span-2 lg:col-span-3 rounded-2xl bg-[#1a1a1a] text-white p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-3 md:gap-10"
+      >
+        <p class="text-sm font-bold tracking-widest text-[#ff8a8a] uppercase shrink-0">Who it suits</p>
+        <p class="text-lg md:text-xl">{transformation.data.suitsWho}</p>
+      </div>
+    </div>
+  </section>
 
-  <!-- CTA band ************************ -->
+  <!-- Work bento ************************ -->
 
-  <CallToAction
-    actions={[{ variant: 'primary', text: 'Get in touch', href: getPermalink('/contact') }]}
-    title="Have a defined piece of work?"
-    subtitle="Tell us what you need built or audited."
-  />
+  <section id="work" class="scroll-mt-[72px] bg-white border-y border-black/5">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20">
+      <p class={eyebrow}>Work</p>
+      <h2 class={h2}>Shipped and live</h2>
+      <p class="mt-3 text-lg text-muted max-w-2xl">Apps we've designed, built, and put on the App Store.</p>
+
+      <div class="mt-10 grid lg:grid-cols-3 gap-4">
+        {
+          tiles.map((tile) => {
+            const w = work.get(tile.id);
+            if (!w) return null;
+            const icon = iconFor(tile.id);
+            return (
+              <article
+                class={`${tile.span} rounded-3xl bg-gradient-to-br from-[#f7f1e9] to-[#ffe9e0] border border-black/5 overflow-hidden flex flex-col`}
+              >
+                <div class="p-6 pb-4">
+                  <div class="flex items-center gap-3">
+                    {icon && (
+                      <Image
+                        src={icon}
+                        alt=""
+                        width={40}
+                        height={40}
+                        layout="none"
+                        class="w-10 h-10 rounded-xl object-contain bg-white"
+                        format="webp"
+                      />
+                    )}
+                    <h3 class="text-xl font-bold font-heading text-heading">{w.data.title}</h3>
+                  </div>
+                  <p class="mt-3 text-muted">{w.data.problem}</p>
+                  <p class="mt-3 text-sm flex flex-wrap gap-x-4 gap-y-1">
+                    {w.data.appStoreUrl && (
+                      <a href={w.data.appStoreUrl} class="font-semibold text-accent underline" rel="noopener">
+                        App Store<span class="sr-only"> — {w.data.title}</span>
+                      </a>
+                    )}
+                    {w.data.siteUrl && (
+                      <a href={w.data.siteUrl} class="font-semibold text-accent underline" rel="noopener">
+                        Website<span class="sr-only"> — {w.data.title}</span>
+                      </a>
+                    )}
+                  </p>
+                </div>
+
+                <div class="mt-auto flex justify-center items-start gap-3 px-6 h-56 overflow-hidden">
+                  {tile.phones?.map((phone, i) => (
+                    <div
+                      class:list={[
+                        'w-32 shrink-0 rounded-[1.6rem] border-[5px] border-[#1a1a1a] bg-[#1a1a1a] overflow-hidden shadow-xl',
+                        i % 2 ? 'mt-8' : 'mt-2',
+                      ]}
+                    >
+                      <Image
+                        src={phone.src}
+                        alt={phone.alt}
+                        widths={[128, 256]}
+                        sizes="128px"
+                        width={128}
+                        height={277}
+                        layout="none"
+                        class="w-full h-auto rounded-[1.2rem]"
+                        format="webp"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                  {tile.wide && (
+                    <Image
+                      src={tile.wide.src}
+                      alt={tile.wide.alt}
+                      widths={[360, 720]}
+                      sizes="(max-width: 1024px) 90vw, 360px"
+                      width={360}
+                      height={176}
+                      layout="none"
+                      class="w-full h-auto self-center rounded-xl"
+                      format="webp"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Development services (secondary) -->
+  <!-- Engineering positioning paraphrases the PRD (§1) — exact wording pending
+       final client sign-off. -->
+
+  <section id="services" class="scroll-mt-[72px]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20">
+      <p class={eyebrow}>We also build</p>
+      <h2 class={h2}>Development services</h2>
+      <p class="mt-3 text-lg text-muted max-w-2xl">
+        Web, mobile, and AI engineering — on their own or as part of a transformation.
+      </p>
+
+      <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {
+          development.map((s) => (
+            <div id={s.id} class="scroll-mt-[72px] rounded-2xl bg-white border border-black/5 p-5 shadow-sm">
+              <span class="w-11 h-11 rounded-xl bg-[#1a1a1a] flex items-center justify-center mb-4">
+                <Icon name={s.data.icon} class="w-6 h-6 text-white" aria-hidden="true" />
+              </span>
+              <h3 class="font-bold font-heading text-lg text-heading">{s.data.title}</h3>
+              <p class="text-sm text-muted mt-1">{s.data.summary}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact *************************** -->
+
+  <section id="contact" class="scroll-mt-[72px] relative overflow-hidden bg-white border-t border-black/5">
+    <div class="glow -bottom-40 -left-32 w-[480px] h-[480px] bg-[#ff5757]/15" aria-hidden="true"></div>
+    <div
+      class="relative max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20 grid lg:grid-cols-2 gap-10 lg:gap-16 items-start"
+    >
+      <div>
+        <p class={eyebrow}>Contact</p>
+        <h2 class={h2}>Not sure where AI fits yet?</h2>
+        <p class="mt-4 text-lg text-muted">
+          Tell us how your team works today, or what you need built. We'll reply with a clear next step.
+        </p>
+        <p class="mt-4 text-muted">
+          Prefer email? Write to <a class="text-accent underline" href="mailto:hello@app62.tech">hello@app62.tech</a>.
+        </p>
+      </div>
+      <ContactForm />
+    </div>
+  </section>
 </Layout>
+
+<style>
+  .glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+  .flow {
+    animation: flow 1.6s linear infinite;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -24;
+    }
+  }
+  .pulse {
+    transform-origin: 270px 195px;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      transform: scale(1.12);
+      opacity: 0.4;
+    }
+  }
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .float-delay {
+    animation-delay: -3s;
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+</style>

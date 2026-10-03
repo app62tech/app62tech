@@ -10,19 +10,7 @@ import AxeBuilder from '@axe-core/playwright';
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const PORT = 4173;
 
-const ROUTES = [
-  '/',
-  '/services/',
-  '/work/',
-  '/work/clique/',
-  '/work/cardlynk/',
-  '/work/menu-gen-ai/',
-  '/work/vetra/',
-  '/contact/',
-  '/privacy/',
-  '/terms/',
-  '/404.html',
-];
+const ROUTES = ['/', '/privacy/', '/terms/', '/404.html'];
 
 const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.svg': 'image/svg+xml' };
 

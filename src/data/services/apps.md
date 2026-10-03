@@ -1,6 +1,6 @@
 ---
 title: 'Apps'
-order: 2
+order: 3
 icon: 'tabler:device-mobile'
 summary: 'iOS and web application development, from prototype through store submission.'
 description: 'iOS and web application development, from prototype through store submission.'

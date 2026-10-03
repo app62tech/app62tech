@@ -1,13 +1,13 @@
-import { getPermalink, getHomePermalink } from './utils/permalinks';
+import { getPermalink } from './utils/permalinks';
 
 export const headerData = {
   links: [
-    { text: 'Home', href: getHomePermalink() },
-    { text: 'Services', href: getPermalink('/services') },
-    { text: 'Work', href: getPermalink('/work') },
-    { text: 'Contact', href: getPermalink('/contact') },
+    { text: 'Process', href: '/#how-it-works' },
+    { text: 'Deliverables', href: '/#deliverables' },
+    { text: 'Work', href: '/#work' },
+    { text: 'Development', href: '/#services' },
   ],
-  actions: [{ text: 'Get in touch', href: getPermalink('/contact'), variant: 'primary' }],
+  actions: [{ text: "Let's talk", href: '/#contact', variant: 'primary', icon: 'tabler:arrow-right' }],
 };
 
 export const footerData = {
