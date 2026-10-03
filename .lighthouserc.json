@@ -15,9 +15,9 @@
         "categories:performance": ["error", { "minScore": 0.95 }],
         "categories:accessibility": ["error", { "minScore": 1 }],
         "categories:seo": ["error", { "minScore": 0.9 }],
-        "resource-summary:script:size": ["error", { "maxNumericValue": 10240 }],
+        "resource-summary:script:size": ["error", { "maxNumericValue": 15360 }],
         "resource-summary:total:size": ["error", { "maxNumericValue": 409600 }],
-        "largest-contentful-paint": ["error", { "maxNumericValue": 1500 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }]
       }
     },

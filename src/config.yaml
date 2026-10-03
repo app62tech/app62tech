@@ -68,7 +68,7 @@ analytics:
     # Google Analytics is explicitly not used. Create the site under
     # Cloudflare dashboard > Analytics > Web Analytics and paste the token.
     cloudflare:
-      token: null
+      token: 64056c79886a475381911d795c4bdb5f
 
 ui:
   # Dark mode disabled for launch — see plan §"Dark mode" decision.

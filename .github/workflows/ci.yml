@@ -1,5 +1,8 @@
 name: CI
 
+# Quality gate only. Deploys are handled by Cloudflare's Git integration
+# (Workers Builds) on every push to main.
+
 on:
   pull_request:
   push:
@@ -57,27 +60,3 @@ jobs:
           # `dist/` is representative of what actually ships (PRD §5, §19).
           configPath: ./.lighthouserc.json
           uploadArtifacts: true
-
-  deploy:
-    name: Deploy to Cloudflare Workers
-    runs-on: ubuntu-latest
-    needs: [build-and-test, lighthouse]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-
-      # Requires repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID
-      # (PRD §9 blocker — not something this workflow can create for you).
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
