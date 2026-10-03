@@ -40,7 +40,10 @@ let hadError = false;
 for (const route of ROUTES) {
   const page = await context.newPage();
   try {
-    await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'networkidle' });
+    // Not 'networkidle': the Turnstile widget keeps a connection open, so the
+    // network never goes idle on pages with the contact form.
+    await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
 

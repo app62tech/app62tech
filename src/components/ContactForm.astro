@@ -9,7 +9,10 @@
 //     guards are unchanged.
 import { Icon } from 'astro-icon/components';
 
-const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
+// The site key is public by design (it ships in every page), so it lives in the
+// code rather than depending on a Cloudflare build variable. The matching
+// TURNSTILE_SECRET_KEY stays a Worker secret.
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAFNDp4nI_2-0rusj';
 
 const services = [
   { value: 'ai-transformation', label: 'AI transformation' },
