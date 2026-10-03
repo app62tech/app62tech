@@ -124,7 +124,12 @@ export const POST: APIRoute = async ({ request, locals, url, clientAddress }) =>
       return wantsJson ? jsonResponse({ ok: false }, 400) : redirectTo(url, false);
     }
   } else {
-    console.error('TURNSTILE_SECRET_KEY is not configured — accepting submissions unverified.');
+    // Fail closed: without the secret every submission would go out
+    // unverified, so a config slip must not silently disable spam protection.
+    // (For local `wrangler dev`, put Turnstile's always-pass test secret in
+    // .dev.vars — see README.)
+    console.error('TURNSTILE_SECRET_KEY is not configured — rejecting submission.');
+    return wantsJson ? jsonResponse({ ok: false, reason: 'not_configured' }, 503) : redirectTo(url, false);
   }
 
   const sent = await sendEmail(env, { name, email, service, message });
